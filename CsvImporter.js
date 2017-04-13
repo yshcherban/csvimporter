@@ -19,16 +19,42 @@ let dbReference;
 dbConnect(`${hostname}/${dbName}`).then(db => {
 	dbReference = db;
 	const userCollection = db.collection(userCollectionName);
+	const schoolCollection = db.collection('schools');
 
 	return parse(fileCsvName).then(userArr => {
 		userArr.forEach(userObj => {
-			userCollection.update( {"_id": ObjectId(userObj.id) }, { $set: {"firstName": userObj.firstName, "lastName": userObj.lastName, "gender": userObj.gender } });
-			//userCollection.insert({"_id": ObjectId(userObj.id), "firstName": userObj.firstName, "lastName": userObj.lastName, "gender": userObj.gender, "age": "35" });
+			const formCursor = schoolCollection.find({"_id": ObjectId(schoolID)}, {"forms": {"$elemMatch": {"name": userObj.Form}}, "_id": 0, "forms._id":true });
+			const houseCursor = schoolCollection.find({"_id": ObjectId(schoolID)}, {"houses": {"$elemMatch": {"name": userObj.House}}, "_id": 0, "houses._id":true });
+			
+			let formId;
+			let houseId;	
+
+			/** get form id */
+			formCursor.toArray().then(formData => {
+				
+				formData.forEach(el => {
+					formId = el.forms[0]._id.toString();
+				});
+
+				/** get house id */
+				houseCursor.toArray().then(houseData => {
+					houseData.forEach(el => {
+						houseId = el.houses[0]._id.toString();
+					});
+
+					/** update student */
+					userCollection.update( {"_id": ObjectId(userObj.id) }, { $set: {"firstName": userObj.firstName, "lastName": userObj.lastName, "gender": userObj.gender, 
+							"permissions.0.details.formId": ObjectId(formId), "permissions.0.details.houseId": ObjectId(houseId)  } });	
+					
+					dbReference.close();
+					//userCollection.update( {"_id": ObjectId(userObj.id) }, { $set: {"firstName": userObj.firstName, "lastName": userObj.lastName, "gender": userObj.gender } });
+					//userCollection.insert({"_id": ObjectId(userObj.id), "firstName": userObj.firstName, "lastName": userObj.lastName, "gender": userObj.gender, "age": "35" });
+
+				});			
+			});
 		});
 	});
 
-}).then( ()  => {
-	dbReference.close();
 });
 
 
