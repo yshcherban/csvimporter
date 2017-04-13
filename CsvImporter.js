@@ -46,7 +46,6 @@ dbConnect(`${hostname}/${dbName}`).then(db => {
 					userCollection.update( {"_id": ObjectId(userObj.id) }, { $set: {"firstName": userObj.firstName, "lastName": userObj.lastName, "gender": userObj.gender, 
 							"permissions.0.details.formId": ObjectId(formId), "permissions.0.details.houseId": ObjectId(houseId)  } });	
 					
-					dbReference.close();
 					//userCollection.update( {"_id": ObjectId(userObj.id) }, { $set: {"firstName": userObj.firstName, "lastName": userObj.lastName, "gender": userObj.gender } });
 					//userCollection.insert({"_id": ObjectId(userObj.id), "firstName": userObj.firstName, "lastName": userObj.lastName, "gender": userObj.gender, "age": "35" });
 
@@ -55,6 +54,10 @@ dbConnect(`${hostname}/${dbName}`).then(db => {
 		});
 	});
 
+}).then( () => {
+	setTimeout(function(){
+		dbReference.close();	
+	}, 5000);
 });
 
 
